@@ -56,20 +56,17 @@ databases.each do |mfi| #maximal frequent itemset
       case rule.accept
         when 'H'
         rule.next.set = rule.next.set + (current & d)
-#        puts "#{rule.next.name} = #{rule.next.name} & {#{d.to_a.join ', ' }}"
+        puts "#{rule.next.name} = #{rule.next.name} & {#{d.to_a.join ', ' }}"
         when 'L'
         rule.next.set = rule.next.set + (current - d)
-#        puts "#{rule.next.name} = #{rule.next.name} \\ {#{d.to_a.join ', '}}"
+        puts "#{rule.next.name} = #{rule.next.name} \\ {#{d.to_a.join ', '}}"
       end
     end
   end
-  dumpq nodes
   nodes.reverse.each do |state|
     state.nodes_by_epsilon_rules.each do |next_state|
       next_state.set = next_state.set + state.set
     end
   end
-  dumpq nodes
-  puts '>' while gets !~ /\n/
 end
 dumpq nodes

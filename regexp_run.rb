@@ -32,17 +32,17 @@ while true
     `dot -Tpng -o test.png #{file.path} && open test.png`
 
 
-    graph = "digraph g {\n"
-    graph << "graph [rankdir = LR];\n"
-    graph << NFANode.reduction(enfa).dump
-    graph << "}\n"
+    # graph = "digraph g {\n"
+    # graph << "graph [rankdir = LR];\n"
+    # graph << NFANode.reduction(enfa).dump
+    # graph << "}\n"
 
-    file2 = Tempfile.new('foo')
-    file2.puts(graph)
-    file2.close
+    # file2 = Tempfile.new('foo')
+    # file2.puts(graph)
+    # file2.close
 
-    puts "dot -Tpng -o test2.png #{file2.path} && open test.png"
-    `dot -Tpng -o test2.png #{file2.path} && open test2.png`
+    # puts "dot -Tpng -o test2.png #{file2.path} && open test.png"
+    # `dot -Tpng -o test2.png #{file2.path} && open test2.png`
 
   rescue ParseError
     puts $!

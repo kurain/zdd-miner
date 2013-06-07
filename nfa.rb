@@ -16,7 +16,7 @@ class ENFANode
   attr_accessor :set, :final
 
   def initialize()
-    @name = @@node_count.to_s
+    @name = 'q' + @@node_count.to_s
     @@node_count+=1
     @rules  = []
   end
@@ -33,16 +33,16 @@ class ENFANode
     reutrn @rules.find{|rule| rule.accept == char}
   end
 
-  def search_final(checked = {})
+  def search_final(checked = [])
     return self if self.final
 
-    checked[self.object_id] = true
+    checked.push(self.name)
     @rules.each do |rule|
       find = nil
-      find = rule.next.search_final(checked) unless checked[rule.next.object_id]
+      find = rule.next.search_final(checked) unless checked.include?(rule.next.name)
       return find if find
     end
-    puts "BAN!! #{self.name}"
+    return false
   end
 
   def epsilon_rules
