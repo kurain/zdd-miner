@@ -16,7 +16,7 @@ class ENFANode
   attr_accessor :set, :final
 
   def initialize()
-    @name = 'q' + @@node_count.to_s
+    @name = 'Q' + @@node_count.to_s
     @@node_count+=1
     @rules  = []
   end

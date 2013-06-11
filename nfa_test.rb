@@ -32,41 +32,71 @@ def all_combination(str)
   return res
 end
 
-def dumpq(states)
-  puts "--------"
+def vsop_dump(states)
+  puts "? \"------------------------\""
   states.each do |state|
-    puts "q-#{state.name}"
-    p state.set
+    puts "? \"#{state.name}\""
+    puts "? #{state.name}"
   end
 end
+
+def dumpq(states)
+  warn "--------"
+  states.each do |state|
+    warn "q-#{state.name}"
+    warn state.set.inspect
+  end
+end
+
+def to_vsop(family)
+  family.to_a.map{|set|
+    set.split('').map{|i| "v#{i}" }.join(' ')
+  }.join(' + ')
+end
+
 
 start = nodes[0]
 start.nodes_by_epsilon_rules
 start.nodes_by_epsilon_rules.each do |state|
   state.set = state.set + start.set.dup
 end
-dumpq nodes
 
-databases.each do |mfi| #maximal frequent itemset
+puts "symbol v1 v2 v3 v4 v5"
+nodes.each do |node|
+  puts "#{node.name} = #{node.set.empty? ? 0 : to_vsop(node.set) }"
+end
+
+databases.each_index do |i| #maximal frequent itemset
+  mfi = databases[i]
   d = mfi.map{|e| all_combination(e)}.flatten.to_set
+
+  puts "D#{i} = #{to_vsop(d)}"
   nodes.reverse.each do |state|
     current = state.set.dup
-    state.set = Set.new
     state.rules.each do |rule|
       case rule.accept
         when 'H'
         rule.next.set = rule.next.set + (current & d)
-        puts "#{rule.next.name} = #{rule.next.name} & {#{d.to_a.join ', ' }}"
+        puts "#{rule.next.name} = #{rule.next.name} + (#{state.name} == D#{i})"
+        puts "#{rule.next.name} = (#{rule.next.name} > 0)"
         when 'L'
         rule.next.set = rule.next.set + (current - d)
-        puts "#{rule.next.name} = #{rule.next.name} \\ {#{d.to_a.join ', '}}"
+        puts "#{rule.next.name} = #{rule.next.name} + ((#{state.name} - D#{i}) > 0)"
+        puts "#{rule.next.name} = (#{rule.next.name} > 0)"
       end
     end
+    puts "#{state.name} = 0"
+    state.set = Set.new
   end
   nodes.reverse.each do |state|
     state.nodes_by_epsilon_rules.each do |next_state|
       next_state.set = next_state.set + state.set
+      puts "#{next_state.name} = #{next_state.name} + #{state.name}"
+      puts "#{next_state.name} = (#{next_state.name} > 0)"
     end
   end
 end
-dumpq nodes
+
+final = nodes.find{|node| node.final == true}
+puts "? #{final.name}"
+
