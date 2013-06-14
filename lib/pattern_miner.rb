@@ -3,7 +3,7 @@ require 'nfa.rb'
 require 'tempfile'
 
 class PatternMiner
-  def initialize(pattern)
+  def initialize(pattern, opt)
     @regex_parser = RegexpSimple.new
     @nfa    = @regex_parser.parse(pattern).to_nfa
     @nfa.nodes_by_epsilon_rules.each do |node|
@@ -12,9 +12,8 @@ class PatternMiner
 
     @states = @nfa.to_a
     @itemsets_num = 0
-    @first_accept = true
 
-    @debug = false
+    @debug = opt[:debug] ? true : false
 
     @states.each do |node|
       puts "#{node.name} = 0"
@@ -29,14 +28,30 @@ private
     end
   end
 
-public
-  def frequent_itemsets(filename, order_file, minimum_support_ratio)
+  def read_fimi_file(filename)
     line_count = 0
-    File.open(filename).each_line{|line| line_count+=1}
+    lookup = {}
+    File.open(filename).each_line do |line|
+      line.chomp.split(/\s+/).each do |symbol|
+        lookup[symbol] ||= true
+      end
+      line_count+=1
+    end
+    order = lookup.keys.sort
+    return line_count, order
+  end
+public
+  def frequent_itemsets(filename, minimum_support_ratio)
+    line_count, order = read_fimi_file(filename)
+    vsop_value = "D#{@itemsets_num}"
+
+    order_file = File.open('_order_' + vsop_value, 'w')
+    order_file.puts order.join(" ")
+    order_file.close
     minimum_support = (line_count * minimum_support_ratio).floor
 
-    vsop_value = "D#{@itemsets_num}"
-    puts %Q!#{vsop_value} = Lcm("F" "#{filename}" "#{minimum_support}", "#{order_file}")!
+    puts %Q!#{vsop_value} = Lcm("F" "#{filename}" #{minimum_support} "#{order_file.path}")!
+    puts %Q!? #{vsop_value}! if @debug
     @itemsets_num+=1
     return vsop_value
   end

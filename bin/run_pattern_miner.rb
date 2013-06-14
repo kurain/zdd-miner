@@ -3,24 +3,12 @@ require 'vsop_utils.rb'
 
 include VSOPUtils
 
-databases =
-  [
-   ['134'],
-   ['12'],
-   ['12', '234'],
-   ['234'],
-   ['1','23','34','5'],
-  ]
+pm = PatternMiner.new('LH', :debug => true)
 
-puts "symbol v1 v2 v3 v4 v5"
+files = %w!fimi_1.txt fimi_2.txt!
+ratio = 0.3
 
-pm = PatternMiner.new('L*HHL*')
-
-databases.each_index do |i|
-  mfi = databases[i]
-  d = mfi.map{|e| all_combination(e)}.flatten.to_set
-
-  puts "D#{i} = #{to_vsop(d)}"
-  pm.accept_itemsets("D#{i}")
+files.each do |file|
+  pm.accept_itemsets(pm.frequent_itemsets(file,ratio))
 end
 pm.found_sets
