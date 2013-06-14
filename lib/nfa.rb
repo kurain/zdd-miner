@@ -13,7 +13,7 @@ class ENFANode
   end
 
   attr_reader :rules, :name
-  attr_accessor :set, :final
+  attr_accessor :set, :start, :final
 
   def initialize()
     @name = 'Q' + @@node_count.to_s

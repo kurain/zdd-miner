@@ -10,8 +10,14 @@ class ConcatNode < ASTNode
 
   def to_nfa
     s  = ENFANode.new
+    s.start = true
+
     r1 = @lnode.to_nfa
+    r1.start = false
+
     r2 = @rnode.to_nfa
+    r2.start = false
+
     e  = ENFANode.new
     e.final = true
 
@@ -40,16 +46,16 @@ class StarNode < ASTNode
 
   def to_nfa
     s  = ENFANode.new
+    s.start = true
+    s.final = true
+
     r  = @node.to_nfa
-    e  = ENFANode.new
-    e.final = true
+    r.start = false
 
     s.set_rule(:e, r)
     r_final = r.search_final
-    r_final.set_rule(:e, e)
+    r_final.set_rule(:e, s)
     r_final.final = false
-
-    e.set_rule(:e, s)
     return s
   end
 
@@ -66,6 +72,8 @@ class ValueNode < ASTNode
 
   def to_nfa
     s = ENFANode.new
+    s.start = true
+
     r = ENFANode.new
     r.final = true
     s.set_rule(self.val, r)
