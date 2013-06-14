@@ -13,7 +13,7 @@ class ENFANode
   end
 
   attr_reader :rules, :name
-  attr_accessor :set, :start, :final
+  attr_accessor :set, :start, :final, :minus_node
 
   def initialize()
     @name = 'Q' + @@node_count.to_s
@@ -58,6 +58,24 @@ class ENFANode
       unless checked[rule.next.object_id]
         find.push(rule.next)
         rule.next.nodes_by_epsilon_rules(checked,find)
+      end
+    end
+    return find
+  end
+
+  def lower_rules
+    return @rules.select{|rule| rule.accept == "L"}
+  end
+
+  def nodes_by_lower_rules(checked = {}, find = [])
+    rules = self.lower_rules
+    return find if rules.empty?
+
+    checked[self.object_id] = true
+    rules.each do |rule|
+      unless checked[rule.next.object_id]
+        find.push(rule.next)
+        rule.next.nodes_by_lower_rules(checked,find)
       end
     end
     return find

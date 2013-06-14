@@ -8,6 +8,13 @@ class PatternMiner
     @nfa    = @regex_parser.parse(pattern).to_nfa
     @nfa.nodes_by_epsilon_rules.each do |node|
       node.start = true
+      node.minus_node = true
+      node.nodes_by_lower_rules.each do |lnode|
+        lnode.minus_node = true
+        lnode.nodes_by_epsilon_rules.each do |enode|
+          enode.minus_node = true
+        end
+      end
     end
 
     @states = @nfa.to_a
@@ -43,6 +50,7 @@ private
 public
   def frequent_itemsets(filename, minimum_support_ratio)
     line_count, order = read_fimi_file(filename)
+    @itemsets_num+=1
     vsop_value = "D#{@itemsets_num}"
 
     order_file = File.open('_order_' + vsop_value, 'w')
@@ -51,8 +59,8 @@ public
     minimum_support = (line_count * minimum_support_ratio).floor
 
     puts %Q!#{vsop_value} = Lcm("F" "#{filename}" #{minimum_support} "#{order_file.path}")!
-    puts %Q!? #{vsop_value}! if @debug
-    @itemsets_num+=1
+    puts %Q!? #{vsop_value}!
+
     return vsop_value
   end
 
@@ -63,7 +71,7 @@ public
       if state.rules.empty?
         puts "#{state.name} = 0"
 
-      elsif state.start
+      elsif state.minus_node
         state.rules.each do |rule|
           case rule.accept
           when 'H'

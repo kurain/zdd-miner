@@ -3,7 +3,7 @@ require 'vsop_utils.rb'
 
 include VSOPUtils
 
-pm = PatternMiner.new('LH', :debug => true)
+pm = PatternMiner.new('HH', :debug => false)
 
 files = %w!fimi_1.txt fimi_2.txt!
 ratio = 0.3
