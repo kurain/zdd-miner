@@ -48,18 +48,20 @@ private
     return line_count, order
   end
 public
-  def frequent_itemsets(filename, minimum_support_ratio)
+  def frequent_itemsets(filename, minimum_support_ratio, order_file_path = nil)
     line_count, order = read_fimi_file(filename)
     @itemsets_num+=1
     vsop_value = "D#{@itemsets_num}"
-
-    order_file = File.open('_order_' + vsop_value, 'w')
-    order_file.puts order.join(" ")
-    order_file.close
+    order_file = order_file_path ? File.open(order_file_path, 'r') : nil
+    unless order_file
+      order_file = File.open('_order_' + vsop_value, 'w')
+      order_file.puts order.join(" ")
+      order_file.close
+    end
     minimum_support = (line_count * minimum_support_ratio).floor
 
     puts %Q!#{vsop_value} = Lcm("F" "#{filename}" #{minimum_support} "#{order_file.path}")!
-    puts %Q!? #{vsop_value}!
+    puts %Q!? #{vsop_value}! if @debug
 
     return vsop_value
   end
@@ -120,6 +122,6 @@ public
 
   def found_sets
     final = @states.find{|node| node.final == true}
-    puts "? #{final.name}"
+    puts "? #{final.name} > 0"
   end
 end
