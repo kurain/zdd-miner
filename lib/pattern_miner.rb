@@ -5,24 +5,33 @@ require 'zdd'
 
 class PatternMiner
   attr_reader :states
-  def initialize(pattern, opt)
-    @regex_parser = RegexpSimple.new
-    @nfa    = @regex_parser.parse(pattern).to_nfa
-    @nfa.nodes_by_epsilon_rules.each do |node|
-      node.start = true
+
+  def set_minus_node(node,checked={})
+    return if checked[node]
+    checked[node] = true
+    node.nodes_by_epsilon_rules.each do |node|
       node.minus_node = true
       node.nodes_by_lower_rules.each do |lnode|
         lnode.minus_node = true
-        lnode.nodes_by_epsilon_rules.each do |enode|
-          enode.minus_node = true
-        end
+        set_minus_node(lnode,checked)
       end
     end
+  end
+
+  def initialize(pattern, opt)
+    @regex_parser = RegexpSimple.new
+    @nfa    = @regex_parser.parse(pattern).to_nfa
+
+    @nfa.nodes_by_epsilon_rules.each do |node|
+      node.start = true
+    end
+    set_minus_node(@nfa)
 
     @states = @nfa.to_a
     @itemsets_num = 0
 
     @debug = opt[:debug] ? true : false
+    @lcm_opt = opt[:lcm] ? opt[:lcm]  : "F"
 
     @states.each do |node|
       node.set = ZDD.constant(0)
@@ -72,8 +81,9 @@ public
       order_file.close
     end
     minimum_support = (line_count * minimum_support_ratio).floor
-    zdd = ZDD.lcm("F", filename,  minimum_support, order_file.path)
-    warn "read #{filename}"
+    zdd = ZDD.lcm(@lcm_opt, filename,  minimum_support, order_file.path)
+    warn "read #{filename} #{zdd.count.to_s}"
+    warn "#{symbol_to_name(zdd.to_s)}" if @debug
     return zdd
   end
 
@@ -140,12 +150,14 @@ public
   end
 
   def symbol_to_name(str)
-    str.gsub(/(x\d+)/) { @lookup[$1] }
+    str.gsub(/(x\d+)/) { @lookup[$1] }.gsub(' + ', "\n")
   end
 
   def dump
     @states.each_index do |i|
+#      puts "  q#{i}: " + symbol_to_name(@states[i].set.to_s)
       puts "  q#{i}: " + @states[i].set.to_s
+#      puts "  q#{i}: " + @states[i].set.count.to_s
     end
   end
 end

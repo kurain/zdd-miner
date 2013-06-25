@@ -3,19 +3,22 @@ require 'vsop_utils.rb'
 
 include VSOPUtils
 
-pm = PatternMiner.new('LHL*', :debug => false)
+pattern = ARGV[0] || 'HL*'
+
+pm = PatternMiner.new(pattern, :debug => false, :lcm => "M")
 
 files = []
-(1..11).each do |i|
-  month = sprintf "%02d", i
-  files.push "date_tags_sorted.txt_2012_#{month}_fimi.txt"
+(2008..2011).each do |year|
+  files.push "nico_data/#{year}.txt_fimi.txt"
 end
 
 warn files.inspect
-pm.read_lookup_file('date_tags_sorted.txt_2012_01_lookup.txt')
+pm.read_lookup_file('nico_data/2007.txt_lookup.txt')
 
-ratio = 0.005
+ratio = 0.0002
 files.each do |file|
-  pm.accept_itemsets(pm.frequent_itemsets(file, ratio, 'date_tags_sorted.txt_2012_01_order.txt'))
+  zdd = pm.frequent_itemsets(file, ratio, 'nico_data/2007.txt_order.txt')
+  pm.accept_itemsets(zdd)
 end
-p pm.symbol_to_name(pm.found_sets.to_s)
+puts pm.symbol_to_name(pm.found_sets.to_s)
+warn 'final count: ' + pm.found_sets.count

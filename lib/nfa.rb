@@ -86,6 +86,7 @@ class ENFANode
     nexts = []
     checked[self.object_id] = true
     res << "#{self.name} [peripheries = 2]\n" if self.final
+    res << "#{self.name} [peripheries = 3]\n" if self.minus_node
 
     self.rules.each do |rule|
       res += sprintf "%s -> %s[label=%s]\n", self.name, rule.next.name, rule.accept

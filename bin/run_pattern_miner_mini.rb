@@ -5,9 +5,18 @@ require 'pattern_miner.rb'
   ZDD.symbol('x' + i.to_s)
 end
 
+# databases =
+#   [
+#    ['134'],
+#    ['12'],
+#    ['12', '234'],
+#    ['234'],
+#    ['1','23','34','5'],
+#   ]
+
 databases =
   [
-   ['134'],
+   ['134','245'],
    ['12'],
    ['12', '234'],
    ['234'],
@@ -30,7 +39,7 @@ def to_vsop(family)
   zdds.inject{|result, itemset| result + itemset}
 end
 
-pm = PatternMiner.new('L*H*', :debug => false)
+pm = PatternMiner.new('HL*', :debug => true)
 databases.each{|mfi|
   d = mfi.map{|e| all_combination(e)}.flatten.to_set
   zdd = to_vsop(d)
@@ -38,3 +47,4 @@ databases.each{|mfi|
   pm.accept_itemsets(zdd)
 }
 puts pm.found_sets.to_s
+
