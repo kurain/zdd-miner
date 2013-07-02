@@ -5,6 +5,9 @@ rule
 
   exp: exp '*' { result = StarNode.new(val[0]) }
      | exp exp { result = ConcatNode.new(val[0],val[1]) }
+     | primary
+
+  primary: '(' exp ')' { result = val[1] }
      | ALPHABET { result = ValueNode.new(val[0]) }
 end
 
@@ -16,6 +19,9 @@ require 'regexp_ast.rb'
 ---- inner
   def parse(str)
     @q = []
+    str = str.gsub(/(H|L){(\d+)}/) do
+      $1 * $2.to_i
+    end
     until str.empty?
       case str[0]
       when ' '
@@ -25,6 +31,10 @@ require 'regexp_ast.rb'
         @q.push [:ALPHABET, 'L']
       when '*'
         @q.push ['*', '*']
+      when '('
+        @q.push ['(', '(']
+      when ')'
+        @q.push [')', ')']
       end
       str = str[1..-1]
     end
