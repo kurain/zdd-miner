@@ -18,7 +18,7 @@ class PatternMiner
     end
   end
 
-  def initialize(pattern, opt)
+  def set_pattern(pattern)
     @regex_parser = RegexpSimple.new
     @nfa    = @regex_parser.parse(pattern).to_nfa
 
@@ -28,14 +28,17 @@ class PatternMiner
     set_minus_node(@nfa)
 
     @states = @nfa.to_a
-    @itemsets_num = 0
-
-    @debug = opt[:debug] ? true : false
-    @lcm_opt = opt[:lcm] ? opt[:lcm]  : "F"
-
     @states.each do |node|
       node.set = ZDD.constant(0)
     end
+  end
+
+  def initialize(pattern, opt)
+    @itemsets_num = 0
+    @debug = opt[:debug] ? true : false
+    @lcm_opt = opt[:lcm] ? opt[:lcm]  : "F"
+
+    set_pattern(pattern)
   end
 
 private

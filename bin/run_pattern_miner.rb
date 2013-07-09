@@ -32,3 +32,17 @@ end
 
 puts pm.symbol_to_name(pm.found_sets.to_s)
 warn 'final count: ' + pm.found_sets.count
+
+while true
+  puts
+  print '? '
+  pattern = gets.chop!
+  pm.set_pattern(pattern)
+
+  monthly_data.each do |zdd|
+    pm.accept_itemsets(zdd)
+  end
+
+  puts pm.symbol_to_name(pm.found_sets.to_s)
+  warn 'final count: ' + pm.found_sets.count
+end
