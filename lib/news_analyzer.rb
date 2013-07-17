@@ -4,10 +4,10 @@ require 'dbi'
 require 'mysql'
 require 'mysql2-cs-bind'
 
-module TweetAnalyzer
-class Tweets
-  def initialize(dsn = "dbi:Mysql:tweets:localhost", table="tweets", user="nobody", pass="nobody")
-    @dsn, @user, @pass, @table = dsn, user, pass, table
+module NewsAnalyzer
+class News
+  def initialize(dsn = "dbi:Mysql:tweets:localhost", user="nobody", pass="nobody")
+    @dsn, @user, @pass = dsn, user, pass
   end
 
   def get_tweets(start_date, end_date)
@@ -22,8 +22,8 @@ class Tweets
                                 :encoding => 'utf8'
 
                                 )
-    return client.xquery('SELECT text FROM ? WHERE timestamp BETWEEN ? AND ?',
-                  @table, start_date, end_date)
+    return client.xquery('SELECT title FROM newsplus WHERE timestamp BETWEEN ? AND ?',
+                  start_date, end_date)
   end
 end
 
