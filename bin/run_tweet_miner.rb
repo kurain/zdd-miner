@@ -5,8 +5,9 @@ require 'date'
 require 'tempfile'
 
 # PASS1 create lookup
+@host = '192.168.11.35'
 def create_lookup(start_dt, end_dt, tagger)
-  db = TweetAnalyzer::Tweets.new("dbi:Mysql:tweets:192.168.11.52")
+  db = TweetAnalyzer::Tweets.new("dbi:Mysql:tweets:#{@host}")
   counter = {}
   tweets = db.get_tweets(start_dt, end_dt)
   tweets.each do |row|
@@ -31,7 +32,7 @@ end
 #PASS 2 create fimi file
 def create_fimi(start_dt, end_dt, tagger, lookup, interval=Rational(1,24))
   current_start = start_dt
-  db = TweetAnalyzer::Tweets.new("dbi:Mysql:tweets:192.168.11.52")
+  db = TweetAnalyzer::Tweets.new("dbi:Mysql:tweets:#{@host}")
 
   files = []
   while current_start < end_dt

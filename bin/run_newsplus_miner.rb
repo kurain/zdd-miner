@@ -3,11 +3,13 @@ require 'news_analyzer'
 require 'burst_miner'
 require 'date'
 require 'tempfile'
+STDOUT.sync = true
 
 @data_dir = ARGV[0]
+interval  = ARGV[1].to_i || 1
 
-unless @data_dir || !Dir.new(@data_dir).exist?
-  warn "usage: #{File.basename(__FILE__)} <data_dir>"
+if !@data_dir || !File.exist?(@data_dir) || !interval
+  warn "usage: #{File.basename(__FILE__)} <data_dir> <interval(day)>"
   exit(1)
 end
 
@@ -16,8 +18,8 @@ end
 def create_lookup(start_dt, end_dt, tagger)
   db = NewsAnalyzer::News.new("dbi:Mysql:newsplus:#{@host}")
   counter = {}
-  tweets = db.get_tweets(start_dt, end_dt)
-  tweets.each do |row|
+  titles = db.get_titles(start_dt, end_dt)
+  titles.each do |row|
     t = row["title"].force_encoding(Encoding::UTF_8)
     tagger.hatena_keyword(t).each do |word|
       counter[word] ||= 0
@@ -46,12 +48,13 @@ def create_fimi(start_dt, end_dt, tagger, lookup, interval=1)
     file = File.new(@data_dir + '/' + current_start.iso8601, 'w')
     warn file.path
 
-    tweets = db.get_tweets(current_start, current_start + interval)
-    printf($stderr, "read %s to %s (%d)\n", current_start.iso8601, end_dt.iso8601, tweets.size)
+    titles = db.get_titles(current_start, current_start + interval)
+    printf($stderr, "read %s to %s (%d)\n", current_start.iso8601, (current_start + interval).iso8601, titles.size)
 
     words = docs = 0
-    tweets.each do |row|
+    titles.each do |row|
       t = row["title"].force_encoding(Encoding::UTF_8)
+
       ids = tagger.hatena_keyword(t).map{|keyword|
         lookup[keyword]
       }.select{|e| e}
@@ -93,7 +96,7 @@ if !lookup_file || !order_file
   end
   lookup_file.close
 
-  order_file.puts(('0'..lookup.size.to_s).map{|e| e}.join(' '))
+  order_file.puts(('1'..lookup.size.to_s).map{|e| e}.join(' '))
   order_file.close
 else
   lookup_file.each_line do |line|
@@ -104,9 +107,8 @@ end
 
 fimi_files = Dir.glob(@data_dir + '/' + '2*' ).sort.map{|path| File.new(path)}
 if fimi_files.empty?
-  fimi_files  = create_fimi(start_dt, end_dt, tagger, lookup)
+  fimi_files  = create_fimi(start_dt, end_dt, tagger, lookup, interval)
 end
-p fimi_files.map{|f| f.path}
 
 bm = BurstMiner.new(:debug => false)
 bm.read_lookup_file(lookup_file.path)
@@ -116,10 +118,18 @@ daily_data = []
 fimi_files.each do |file|
   daily_data <<  bm.frequent_itemsets(file.path, ratio, order_file.path, :minimum_support => 1)
 end
+warn "total itemset: #{bm.total_itemset_count}"
 
 d_all = daily_data.inject(0){|sum,e| sum + e[:count]}
+zdd_all = ZDD.constant(0)
+count = 0
+
+daily_data.each do |data|
+  zdd_all = zdd_all + data[:zdd]
+  printf $stderr, "count %d\r", count+=1
+end
 
 s = 2
 (0...daily_data.length).each do |i|
-  bm.find_burst(daily_data, i, s, d_all)
+  bm.find_burst(daily_data, i, s, d_all, zdd_all)
 end
