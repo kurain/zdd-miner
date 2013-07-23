@@ -3,49 +3,35 @@ require 'nfa.rb'
 require 'pp'
 require 'tempfile'
 
+str            =  ARGV[0]
+delete_epsilon = !ARGV[1].nil?
+reduction      = !ARGV[2].nil?
+reduction_advanced = !ARGV[3].nil?
 parser = RegexpSimple.new
-puts
-puts 'type "Q" to quit.'
-puts
-while true
-  puts
-  print '? '
-  str = gets.chop!
-  break if /q/i =~ str
-  begin
-    ast = parser.parse(str)
-    p ast
-    p ast.class
-    enfa = ast.to_nfa
-    graph = "digraph g {\n"
-    graph << "graph [rankdir = LR];\n"
-    graph <<  enfa.dump
-    graph << "}\n"
 
-    puts graph
+puts str
+ast = parser.parse(str)
 
-    file = Tempfile.new('foo')
-    file.puts(graph)
-    file.close
+enfa = ast.to_nfa
 
-    puts "dot -Tpng -o test.png #{file.path} && open test.png"
-    `dot -Tpng -o test.png #{file.path} && open test.png`
+ENFANode.delete_epsilon(enfa) if delete_epsilon
+ENFANode.reduction(enfa) if reduction
+ENFANode.reduction_advanced(enfa) if reduction_advanced
 
 
-    # graph = "digraph g {\n"
-    # graph << "graph [rankdir = LR];\n"
-    # graph << NFANode.reduction(enfa).dump
-    # graph << "}\n"
 
-    # file2 = Tempfile.new('foo')
-    # file2.puts(graph)
-    # file2.close
+graph = "digraph g {\n"
+graph << "graph [rankdir = LR];\n"
+graph <<  enfa.dump
+graph << "}\n"
 
-    # puts "dot -Tpng -o test2.png #{file2.path} && open test.png"
-    # `dot -Tpng -o test2.png #{file2.path} && open test2.png`
+puts graph
 
-  rescue ParseError
-    puts $!
-  end
-  NFANode.count_refresh
-end
+file = Tempfile.new('foo')
+file.puts(graph)
+file.close
+
+warn "dot -Tpng -o test.png #{file.path} && open test.png"
+`dot -Tpng -o test.png #{file.path} && open test.png`
+
+

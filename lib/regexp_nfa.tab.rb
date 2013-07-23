@@ -12,7 +12,7 @@ require 'regexp_ast.rb'
 
 class RegexpSimple < Racc::Parser
 
-module_eval(<<'...end regexp_nfa.y/module_eval...', 'regexp_nfa.y', 20)
+module_eval(<<'...end regexp_nfa.y/module_eval...', 'regexp_nfa.y', 26)
   def parse(str)
     @q = []
     str = str.gsub(/(H|L){(\d+)}/) do
@@ -21,10 +21,10 @@ module_eval(<<'...end regexp_nfa.y/module_eval...', 'regexp_nfa.y', 20)
     until str.empty?
       case str[0]
       when ' '
-      when 'H'
-        @q.push [:ALPHABET, 'H']
-      when 'L'
-        @q.push [:ALPHABET, 'L']
+      when '|'
+        @q.push ['|', '|']
+      when /[A-Z]/
+        @q.push [:ALPHABET, str[0]]
       when '*'
         @q.push ['*', '*']
       when '('
@@ -46,26 +46,28 @@ module_eval(<<'...end regexp_nfa.y/module_eval...', 'regexp_nfa.y', 20)
 ##### State transition tables begin ###
 
 racc_action_table = [
-     8,     4,    11,     5,     8,     4,     6,     5,     8,     4,
-     4,     5,     5,     4,    10,     5 ]
+     9,     8,     4,     6,     5,     9,     8,     4,    13,     5,
+     8,     4,    11,     5,     8,     4,     4,     5,     5,     4,
+     4,     5,     5 ]
 
 racc_action_check = [
-     9,     9,     9,     9,     7,     7,     1,     7,     2,     2,
-     4,     2,     4,     0,     6,     0 ]
+     2,     2,     2,     1,     2,    10,    10,    10,    10,    10,
+    12,    12,     6,    12,     7,     7,     9,     7,     9,     4,
+     0,     4,     0 ]
 
 racc_action_pointer = [
-    10,     6,     6,   nil,     7,   nil,    14,     2,   nil,    -2,
-   nil,   nil ]
+    14,     3,    -4,   nil,    13,   nil,    12,     9,   nil,    10,
+     1,   nil,     5,   nil ]
 
 racc_action_default = [
-    -2,    -8,    -1,    -5,    -8,    -7,    -8,    -4,    -3,    -8,
-    12,    -6 ]
+    -2,    -9,    -1,    -6,    -9,    -8,    -9,    -5,    -3,    -9,
+    -9,    14,    -4,    -7 ]
 
 racc_goto_table = [
-     2,     1,   nil,   nil,     9 ]
+     2,     1,   nil,   nil,    10,   nil,   nil,   nil,   nil,    12 ]
 
 racc_goto_check = [
-     2,     1,   nil,   nil,     2 ]
+     2,     1,   nil,   nil,     2,   nil,   nil,   nil,   nil,     2 ]
 
 racc_goto_pointer = [
    nil,     1,     0,   nil ]
@@ -75,27 +77,31 @@ racc_goto_default = [
 
 racc_reduce_table = [
   0, 0, :racc_error,
-  1, 7, :_reduce_none,
-  0, 7, :_reduce_2,
-  2, 8, :_reduce_3,
-  2, 8, :_reduce_4,
-  1, 8, :_reduce_none,
-  3, 9, :_reduce_6,
-  1, 9, :_reduce_7 ]
+  1, 10, :_reduce_none,
+  0, 10, :_reduce_2,
+  2, 11, :_reduce_3,
+  3, 11, :_reduce_4,
+  2, 11, :_reduce_5,
+  1, 11, :_reduce_none,
+  3, 12, :_reduce_7,
+  1, 12, :_reduce_8 ]
 
-racc_reduce_n = 8
+racc_reduce_n = 9
 
-racc_shift_n = 12
+racc_shift_n = 14
 
 racc_token_table = {
   false => 0,
   :error => 1,
-  "*" => 2,
-  "(" => 3,
-  ")" => 4,
-  :ALPHABET => 5 }
+  :STAR => 2,
+  :CONCAT => 3,
+  "|" => 4,
+  "*" => 5,
+  "(" => 6,
+  ")" => 7,
+  :ALPHABET => 8 }
 
-racc_nt_base = 6
+racc_nt_base = 9
 
 racc_use_result_var = true
 
@@ -118,6 +124,9 @@ Racc_arg = [
 Racc_token_to_s_table = [
   "$end",
   "error",
+  "STAR",
+  "CONCAT",
+  "\"|\"",
   "\"*\"",
   "\"(\"",
   "\")\"",
@@ -135,38 +144,45 @@ Racc_debug_parser = false
 
 # reduce 1 omitted
 
-module_eval(<<'.,.,', 'regexp_nfa.y', 3)
+module_eval(<<'.,.,', 'regexp_nfa.y', 8)
   def _reduce_2(val, _values, result)
      result = 0 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'regexp_nfa.y', 5)
+module_eval(<<'.,.,', 'regexp_nfa.y', 10)
   def _reduce_3(val, _values, result)
      result = StarNode.new(val[0]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'regexp_nfa.y', 6)
+module_eval(<<'.,.,', 'regexp_nfa.y', 11)
   def _reduce_4(val, _values, result)
+     p val ;result = DisjunctionNode.new(val[0], val[2]) 
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'regexp_nfa.y', 12)
+  def _reduce_5(val, _values, result)
      result = ConcatNode.new(val[0],val[1]) 
     result
   end
 .,.,
 
-# reduce 5 omitted
+# reduce 6 omitted
 
-module_eval(<<'.,.,', 'regexp_nfa.y', 9)
-  def _reduce_6(val, _values, result)
+module_eval(<<'.,.,', 'regexp_nfa.y', 15)
+  def _reduce_7(val, _values, result)
      result = val[1] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'regexp_nfa.y', 10)
-  def _reduce_7(val, _values, result)
+module_eval(<<'.,.,', 'regexp_nfa.y', 16)
+  def _reduce_8(val, _values, result)
      result = ValueNode.new(val[0]) 
     result
   end
